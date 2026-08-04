@@ -69,8 +69,7 @@ mock RPC Memo field and proves that the resulting snapshot does not contain it.
 
 ## Links to add before submission
 
-- GitHub repository: `[TODO]`
+- GitHub repository: `https://github.com/heycetty/zeroclaw-solana-wallet-guard`
 - Demo video: `[TODO]`
 - ZeroClaw Discord showcase: `[TODO]`
 - Build-in-public post: `[TODO]`
-
