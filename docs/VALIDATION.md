@@ -12,8 +12,9 @@ test_private_rpc_is_fail_closed ... ok
 test_prompt_injection_text_never_enters_report ... ok
 test_rpc_method_allowlist ... ok
 test_token_change_uses_mint_and_numbers_only ... ok
+test_truncated_snapshots_do_not_claim_token_deltas ... ok
 
-Ran 7 tests
+Ran 8 tests
 OK
 ```
 
@@ -39,4 +40,3 @@ The live test used the operator's protected RPC wrapper. No provider URL or key
 was copied into the repository or validation output. The configured public demo
 address was the Compute Budget program address; replace it with a real public
 wallet address before recording the final demo.
-

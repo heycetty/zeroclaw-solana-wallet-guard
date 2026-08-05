@@ -5,8 +5,7 @@
   "state_path": "../.state/wallet-guard.json",
   "commitment": "confirmed",
   "max_signatures": 10,
-  "max_token_accounts": 100,
+  "max_token_accounts": 500,
   "sol_change_threshold": 0.1,
   "allow_private_rpc": false
 }
-

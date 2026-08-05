@@ -12,6 +12,10 @@ transaction.
 - new recent signatures and failed signatures
 - token-account result truncation
 
+When either comparison snapshot is truncated, the guard marks token deltas as
+unreliable and suppresses them instead of presenting partial inventory changes
+as real wallet activity.
+
 The first scan establishes a baseline. Later scans compare current public-chain
 state with the last local snapshot.
 
@@ -105,7 +109,7 @@ token metadata, and arbitrary account contents.
 
 ## Evidence
 
-- `python3 -m unittest discover -s tests -v`: 7 tests pass
+- `python3 -m unittest discover -s tests -v`: 8 tests pass
 - ZeroClaw `skills audit`: passed, 2 skill files scanned
 - ZeroClaw 0.8.4 loaded the skill for agent `guard`
 - A real agent turn called `solana-wallet-guard__scan_wallet` and reported

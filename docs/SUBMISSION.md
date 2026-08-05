@@ -34,7 +34,7 @@ report. ZeroClaw explains only the changes that deserve attention.
 - bounded signatures, token accounts, response bytes, and model output
 - atomic private snapshot storage
 - SOL, SPL-token, new-signature, and failed-signature change detection
-- seven deterministic tests, including a malicious Memo fixture
+- eight deterministic tests, including malicious Memo and truncation fixtures
 - threat model, deployment guide, and three-minute demo outline
 
 ## Custody and safety
@@ -53,7 +53,7 @@ mock RPC Memo field and proves that the resulting snapshot does not contain it.
 2. Copy `config/guard.example.json` to the ignored `config/guard.json`.
 3. Set a public wallet address and provide `SOL_RPC` through a secret manager or
    secure wrapper.
-4. Run the seven offline tests.
+4. Run the eight offline tests.
 5. Install and audit the included skill with the stock ZeroClaw CLI.
 6. Ask the `guard` agent to scan, then optionally attach a narrowly scoped cron
    job allowing only `solana-wallet-guard__scan_wallet`.
@@ -62,7 +62,7 @@ mock RPC Memo field and proves that the resulting snapshot does not contain it.
 
 - **Use case:** useful daily monitoring with a clear operator action.
 - **Safety:** T0 custody, fail-closed methods and endpoints, no untrusted text.
-- **Craft:** deterministic core, atomic state, bounded output, seven tests.
+- **Craft:** deterministic core, atomic state, bounded output, eight tests.
 - **Reproducibility:** standard library only and a stock ZeroClaw skill.
 - **Showcase:** baseline, activity alert, and injection-defense proof fit in
   under three minutes.

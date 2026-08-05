@@ -149,7 +149,7 @@ def load_config(path: pathlib.Path) -> tuple[GuardConfig, dict[str, Any]]:
 
     max_signatures = bounded_integer(raw.get("max_signatures", 10), "max_signatures", 1, 25)
     max_token_accounts = bounded_integer(
-        raw.get("max_token_accounts", 100), "max_token_accounts", 1, 200
+        raw.get("max_token_accounts", 500), "max_token_accounts", 1, 500
     )
     try:
         sol_threshold = Decimal(str(raw.get("sol_change_threshold", "0.1")))
@@ -328,6 +328,7 @@ def fetch_snapshot(config: GuardConfig, client: RpcClient) -> dict[str, Any]:
         "lamports": lamports,
         "tokens": tokens,
         "signatures": safe_signatures,
+        "tokenAccountsReturned": len(values),
         "tokenAccountsObserved": min(len(values), config.max_token_accounts),
         "tokenAccountsTruncated": len(values) > config.max_token_accounts,
     }
@@ -403,13 +404,21 @@ def build_report(
     ]
     failed_new = [item for item in new_signatures if item["failed"]]
 
+    token_diff_reliable = (
+        previous is None
+        or (
+            previous.get("tokenAccountsTruncated") is False
+            and current["tokenAccountsTruncated"] is False
+        )
+    )
+
     if previous is None:
         sol_delta = 0
         changes: list[dict[str, Any]] = []
         status = "baseline"
     else:
         sol_delta = current["lamports"] - int(previous.get("lamports", 0))
-        changes = token_changes(previous, current)
+        changes = token_changes(previous, current) if token_diff_reliable else []
         is_alert = (
             abs(sol_delta) >= config.sol_change_threshold_lamports
             or bool(changes)
@@ -439,8 +448,10 @@ def build_report(
         "tokenChanges": changes,
         "inventory": {
             "tokenMintCount": len(current["tokens"]),
+            "tokenAccountsReturned": current["tokenAccountsReturned"],
             "tokenAccountsObserved": current["tokenAccountsObserved"],
             "tokenAccountsTruncated": current["tokenAccountsTruncated"],
+            "tokenDiffReliable": token_diff_reliable,
         },
         "safety": {
             "custodyTier": "T0_READ_ONLY",
@@ -495,4 +506,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
