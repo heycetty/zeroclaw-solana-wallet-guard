@@ -1,8 +1,8 @@
-# Submission draft
+# Submission write-up
 
 ## Title
 
-Solana Wallet Guard — a T0, prompt-injection-resistant watcher for ZeroClaw
+Solana Wallet Guard — T0 read-only wallet change monitoring for ZeroClaw
 
 ## One-line description
 
@@ -34,7 +34,8 @@ report. ZeroClaw explains only the changes that deserve attention.
 - bounded signatures, token accounts, response bytes, and model output
 - atomic private snapshot storage
 - SOL, SPL-token, new-signature, and failed-signature change detection
-- eight deterministic tests, including malicious Memo and truncation fixtures
+- ten deterministic tests, including malicious Memo, invalid-state, signature
+  saturation, and truncation fixtures
 - threat model, deployment guide, and three-minute demo outline
 
 ## Custody and safety
@@ -67,9 +68,10 @@ mock RPC Memo field and proves that the resulting snapshot does not contain it.
 - **Showcase:** baseline, activity alert, and injection-defense proof fit in
   under three minutes.
 
-## Links to add before submission
+## Submission links
 
 - GitHub repository: `https://github.com/heycetty/zeroclaw-solana-wallet-guard`
-- Demo video: `[TODO]`
+- Build-in-public demo: `https://x.com/clknoiz06/status/2084919175919583339`
+- Required YouTube/Vimeo/GDrive demo link: `[TODO after upload]`
 - ZeroClaw Discord showcase: `[TODO]`
-- Build-in-public post: `[TODO]`
+- Paste-ready Discord copy: `docs/SHOWCASE.md`

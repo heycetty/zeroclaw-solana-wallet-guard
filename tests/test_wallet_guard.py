@@ -9,6 +9,8 @@ from scripts.wallet_guard import (
     RpcClient,
     build_report,
     decode_base58,
+    fetch_snapshot,
+    read_previous_state,
     validate_rpc_url,
     validate_wallet_address,
 )
@@ -39,6 +41,7 @@ def snapshot(lamports=1_000_000_000, signatures=None, tokens=None):
         "lamports": lamports,
         "tokens": tokens or {},
         "signatures": signatures or [],
+        "signatureWindowSaturated": False,
         "tokenAccountsReturned": len(tokens or {}),
         "tokenAccountsObserved": len(tokens or {}),
         "tokenAccountsTruncated": False,
@@ -84,6 +87,33 @@ class WalletGuardTests(unittest.TestCase):
         self.assertEqual(report["balance"]["deltaLamports"], -300_000_000)
         self.assertEqual(report["activity"]["failedNewSignatureCount"], 1)
 
+    def test_saturated_signature_window_marks_count_as_inexact(self):
+        rpc_responses = iter(
+            [
+                {"jsonrpc": "2.0", "id": 1, "result": {"value": 1_000_000_000}},
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "result": [
+                        {"signature": f"sig-{index}", "slot": index, "err": None}
+                        for index in range(config().max_signatures)
+                    ],
+                },
+                {"jsonrpc": "2.0", "id": 3, "result": {"value": []}},
+            ]
+        )
+
+        def transport(_request, _timeout):
+            return json.dumps(next(rpc_responses)).encode()
+
+        current = fetch_snapshot(
+            config(), RpcClient("https://example.com", transport=transport)
+        )
+        report = build_report(config(), snapshot(), current)
+        self.assertTrue(report["activity"]["signatureWindowSaturated"])
+        self.assertFalse(report["activity"]["signatureDiffReliable"])
+        self.assertFalse(report["activity"]["newSignatureCountExact"])
+
     def test_token_change_uses_mint_and_numbers_only(self):
         previous = snapshot(tokens={MINT: {"rawAmount": 10, "decimals": 2}})
         current = snapshot(tokens={MINT: {"rawAmount": 25, "decimals": 2}})
@@ -125,10 +155,15 @@ class WalletGuardTests(unittest.TestCase):
             return json.dumps(next(rpc_responses)).encode()
 
         client = RpcClient("https://example.com", transport=transport)
-        from scripts.wallet_guard import fetch_snapshot
-
         observed = fetch_snapshot(config(), client)
         self.assertNotIn(malicious, json.dumps(observed))
+
+    def test_invalid_state_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "state.json"
+            path.write_text("{not-json", encoding="utf-8")
+            with self.assertRaisesRegex(GuardError, "state file"):
+                read_previous_state(path, ADDRESS)
 
 
 if __name__ == "__main__":

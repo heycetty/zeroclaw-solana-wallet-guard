@@ -328,6 +328,7 @@ def fetch_snapshot(config: GuardConfig, client: RpcClient) -> dict[str, Any]:
         "lamports": lamports,
         "tokens": tokens,
         "signatures": safe_signatures,
+        "signatureWindowSaturated": len(signatures_result) >= config.max_signatures,
         "tokenAccountsReturned": len(values),
         "tokenAccountsObserved": min(len(values), config.max_token_accounts),
         "tokenAccountsTruncated": len(values) > config.max_token_accounts,
@@ -339,10 +340,21 @@ def read_previous_state(path: pathlib.Path, wallet_address: str) -> dict[str, An
         state = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return None
-    except (OSError, json.JSONDecodeError):
-        return None
-    if not isinstance(state, dict) or state.get("walletAddress") != wallet_address:
-        return None
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GuardError("state file is not readable valid JSON") from exc
+    if not isinstance(state, dict) or state.get("schemaVersion") != 1:
+        raise GuardError("state file has an unsupported shape or schema")
+    if state.get("walletAddress") != wallet_address:
+        raise GuardError("state file wallet address does not match config")
+    if (
+        isinstance(state.get("lamports"), bool)
+        or not isinstance(state.get("lamports"), int)
+        or state["lamports"] < 0
+        or not isinstance(state.get("tokens"), dict)
+        or not isinstance(state.get("signatures"), list)
+        or not isinstance(state.get("tokenAccountsTruncated"), bool)
+    ):
+        raise GuardError("state file has invalid snapshot fields")
     return state
 
 
@@ -403,6 +415,8 @@ def build_report(
         item for item in signatures if item["signature"] not in previous_signatures
     ]
     failed_new = [item for item in new_signatures if item["failed"]]
+    signature_window_saturated = current.get("signatureWindowSaturated") is True
+    signature_diff_reliable = not signature_window_saturated
 
     token_diff_reliable = (
         previous is None
@@ -442,8 +456,11 @@ def build_report(
         },
         "activity": {
             "newSignatureCount": len(new_signatures),
+            "newSignatureCountExact": signature_diff_reliable,
             "failedNewSignatureCount": len(failed_new),
             "newSignatures": new_signatures,
+            "signatureWindowSaturated": signature_window_saturated,
+            "signatureDiffReliable": signature_diff_reliable,
         },
         "tokenChanges": changes,
         "inventory": {

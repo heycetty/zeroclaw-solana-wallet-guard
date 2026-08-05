@@ -5,6 +5,18 @@ bounded, deterministic change report. The agent explains the report; it never
 receives wallet keys and cannot construct, sign, simulate, or send a
 transaction.
 
+[![test](https://github.com/heycetty/zeroclaw-solana-wallet-guard/actions/workflows/test.yml/badge.svg)](https://github.com/heycetty/zeroclaw-solana-wallet-guard/actions/workflows/test.yml)
+
+**Validated with stock ZeroClaw 0.8.4 · 10 offline tests · [64-second live
+demo](https://x.com/clknoiz06/status/2084919175919583339)**
+
+## Who should run it
+
+This is for an operator who wants a daily change detector for a public treasury,
+service, fee, grant, or personal wallet without turning an LLM agent into a hot
+wallet. ZeroClaw can run it on demand or by cron, summarize the bounded report,
+and route an alert to the operator's existing channel.
+
 ## What it detects
 
 - SOL balance changes above an operator-defined threshold
@@ -43,6 +55,9 @@ JSON result into an operator-friendly alert. The scanner deliberately keeps
 untrusted on-chain text out of the model context.
 
 ## Quick start
+
+Requirements: Python 3.10 or newer, ZeroClaw 0.8.4, and an operator-supplied
+Solana RPC URL. The scanner itself uses only the Python standard library.
 
 1. Copy the configuration and insert a public wallet address:
 
@@ -100,20 +115,34 @@ three-method allowlist, validates public keys, caps response sizes and list
 lengths, rejects private network targets by default, and omits memos, logs,
 token metadata, and arbitrary account contents.
 
+Two fail-closed details matter in long-running monitoring:
+
+- a corrupt or mismatched local snapshot stops the scan instead of silently
+  replacing history with a new baseline;
+- when the recent-signature window reaches its configured limit, the report
+  marks the activity count as inexact instead of implying complete history.
+
 ## Current limits
 
 - polling, not real-time prevention
 - one configured address per deployment
+- legacy SPL Token Program accounts only; Token-2022 accounts are not queried
 - no token-price or token-legitimacy claims
 - no alert channel bundled yet; ZeroClaw supplies the channel and schedule
 
 ## Evidence
 
-- `python3 -m unittest discover -s tests -v`: 8 tests pass
+- `python3 -m unittest discover -s tests -v`: 10 tests pass in CI and locally
 - ZeroClaw `skills audit`: passed, 2 skill files scanned
 - ZeroClaw 0.8.4 loaded the skill for agent `guard`
-- A real agent turn called `solana-wallet-guard__scan_wallet` and reported
-  `T0_READ_ONLY` with no transaction construction, signing, or broadcast
+- On 2026-08-05, a real agent turn scanned an operator-supplied public address:
+  `9.297981773 SOL`, 395 legacy SPL token accounts, complete token inventory,
+  and `T0_READ_ONLY` with no construction, signing, or broadcast
+- [Validation record](docs/VALIDATION.md) · [threat model](docs/THREAT_MODEL.md)
+  · [paste-ready showcase](docs/SHOWCASE.md)
+
+Questions and reproducible bug reports are welcome in [GitHub
+Issues](https://github.com/heycetty/zeroclaw-solana-wallet-guard/issues).
 
 ## License
 

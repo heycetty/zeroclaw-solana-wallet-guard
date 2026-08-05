@@ -37,8 +37,15 @@ forbids transaction construction, signing, simulation, or broadcasting.
   and compare providers for high-value monitoring.
 - Snapshot alerts detect changes between scans; they are not real-time fraud
   prevention and cannot stop a transfer.
-- Token account output uses mint addresses and raw balances only. It does not
-  assess token legitimacy.
+- The current inventory queries the legacy SPL Token Program only. Token-2022
+  accounts are outside the monitored inventory and are called out as a limit.
+- A recent-signature result that fills `max_signatures` can hide older activity
+  beyond the returned window. The report marks the count as inexact and the
+  signature diff as unreliable in that case.
+- A corrupt, unsupported, or wallet-mismatched local snapshot stops the scan;
+  the operator must inspect or deliberately replace it before monitoring can
+  resume.
+- Token output uses mint addresses and raw balances only. It does not assess
+  token legitimacy.
 - A public address still reveals the operator's monitoring interest. Avoid
   publishing personally sensitive address mappings.
-
